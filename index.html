@@ -1,0 +1,338 @@
+﻿<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сертификат генераторы</title>
+
+<style>
+
+body{
+    margin:0;
+    padding:20px;
+    background:#f4f5f7;
+    font-family:Arial,sans-serif;
+}
+
+.card{
+    max-width:550px;
+    margin:auto;
+    background:#fff;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 0 15px rgba(0,0,0,.1);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+label{
+    display:block;
+    margin-top:15px;
+    margin-bottom:5px;
+    font-weight:600;
+}
+
+input,
+select{
+    width:100%;
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    box-sizing:border-box;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:20px;
+    border:none;
+    border-radius:8px;
+    background:#4060ff;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#2c4be0;
+}
+
+.cert-wrapper{
+    display:none;
+    text-align:center;
+}
+
+.certificate-container{
+    position:relative;
+    width:1200px;
+    max-width:100%;
+    margin:auto;
+}
+
+.cert-bg-img{
+    width:100%;
+    display:block;
+}
+
+/* Мектеп атауы */
+.cert-school{
+    position:absolute;
+    top:38%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:80%;
+    text-align:center;
+    font-size:24px;
+    font-weight:700;
+    color:#0b3270;
+    line-height:1.3;
+}
+
+/* Пән атауы */
+.cert-subject{
+    position:absolute;
+    top:42%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:80%;
+    text-align:center;
+    font-size:22px;
+    font-weight:600;
+    color:#444;
+}
+
+/* Аты-жөні */
+.cert-name{
+    position:absolute;
+    top:48%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:90%;
+    text-align:center;
+    font-size:42px;
+    font-weight:bold;
+    font-family:"Times New Roman", serif;
+    color:#0b3270;
+    line-height:1.1;
+    word-wrap:break-word;
+}
+
+/* Берілген күні */
+.cert-date{
+    position:absolute;
+    bottom:4.5%;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:18px;
+    font-family:"Times New Roman", serif;
+    color:#222;
+    font-weight:500;
+}
+
+.actions{
+    margin-top:20px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+}
+
+.btn-back{
+    background:#6b7280;
+}
+
+.btn-back:hover{
+    background:#4b5563;
+}
+
+.btn-print{
+    background:#10b981;
+}
+
+.btn-print:hover{
+    background:#059669;
+}
+
+@media print{
+
+    @page{
+        size:landscape;
+        margin:0;
+    }
+
+    body{
+        margin:0;
+        padding:0;
+        background:white;
+    }
+
+    .card,
+    .actions{
+        display:none !important;
+    }
+
+    .cert-wrapper{
+        display:block !important;
+    }
+
+    .certificate-container{
+        width:100vw;
+        margin:0;
+    }
+
+    .cert-bg-img{
+        width:100%;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<div class="card" id="inputForm">
+
+<h1>Сертификат генераторы</h1>
+
+<form onsubmit="generateCertificate(event)">
+
+<label>Мектеп / Ұйым атауы</label>
+<input
+id="school"
+type="text"
+placeholder=""Сәдуақас Серкебаев атындағы мектеп-гимназия""
+required>
+
+<label>Пән атауы</label>
+<input
+id="subject"
+type="text"
+placeholder="Информатика"
+required>
+
+<label>Аты-жөні</label>
+<input
+id="name"
+type="text"
+placeholder="Мұғалімнің аты-жөні"
+required>
+
+<label>Берілген күні</label>
+<input
+id="certDate"
+type="date"
+required>
+
+<button type="submit">
+Сертификатты дайындау
+</button>
+
+</form>
+
+</div>
+
+<div class="cert-wrapper" id="certificateWrapper">
+
+<div class="certificate-container">
+
+<img
+src="сertificate.jpeg"
+class="cert-bg-img"
+alt="сertificate">
+
+<div class="cert-school" id="displaySchool"></div>
+
+<div class="cert-subject" id="displaySubject"></div>
+
+<div class="cert-name" id="displayName"></div>
+
+<div class="cert-date" id="displayDate"></div>
+
+</div>
+
+<div class="actions">
+
+<button
+class="btn-back"
+onclick="goBack()">
+Артқа қайту
+</button>
+
+<button
+class="btn-print"
+onclick="window.print()">
+PDF ретінде сақтау
+</button>
+
+</div>
+
+</div>
+
+<script>
+// Бет жүктелгенде дата өрісіне автоматты түрде бүгінгі күнді қою
+window.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('certDate').value = today;
+});
+
+function generateCertificate(event){
+
+    event.preventDefault();
+
+    const school = document.getElementById("school").value;
+    const subject = document.getElementById("subject").value;
+    const name = document.getElementById("name").value;
+    const dateValue = document.getElementById("certDate").value;
+
+    document.getElementById("displaySchool").innerText = school;
+
+    document.getElementById("displaySubject").innerText =
+        subject + " пәні мұғалімі";
+
+    const displayName =
+        document.getElementById("displayName");
+
+    displayName.innerText = name;
+
+    // Дата форматын YYYY-MM-DD түрінен DD.MM.YYYY түріне өзгерту
+    if(dateValue) {
+        const parts = dateValue.split('-');
+        const formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+        document.getElementById("displayDate").innerText = `Берілген күні: ${formattedDate} ж.`;
+    }
+
+    if(name.length <= 20){
+        displayName.style.fontSize = "42px";
+    }
+    else if(name.length <= 30){
+        displayName.style.fontSize = "36px";
+    }
+    else if(name.length <= 40){
+        displayName.style.fontSize = "32px";
+    }
+    else{
+        displayName.style.fontSize = "28px";
+    }
+
+    document.getElementById("inputForm").style.display = "none";
+    document.getElementById("certificateWrapper").style.display = "block";
+    // Сақтаған кезде файл атауы мұғалімнің атымен шығуы үшін веб-беттің тақырыбын өзгерту
+document.title = `Сертификат - ${name}`;
+}
+
+function goBack(){
+
+    document.getElementById("inputForm").style.display = "block";
+    document.getElementById("certificateWrapper").style.display = "none";
+    // Артқа қайтқанда веб-бет тақырыбын бастапқы қалпына келтіру
+document.title = "Заманауи Сертификат Генераторы";
+}
+
+</script>
+
+</body>
+</html>
